@@ -1,8 +1,3 @@
-// General improvements/TODOs
-// - allow different tuninings
-// - allow different string counts
-// - allow different fret ranges besides 1->17
-
 #[derive(Clone, Copy, PartialEq)]
 enum Note {
     A,
