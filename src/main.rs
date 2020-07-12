@@ -4,9 +4,6 @@
 // - allow different fret ranges besides 1->17
 // - pick unique colors for different notes highlighted
 
-use ansi_term::Colour::Black as ATBlack;
-use ansi_term::Colour::White as ATWhite;
-
 #[derive(Clone, Copy, PartialEq)]
 enum Note {
     A,
@@ -106,6 +103,18 @@ impl From<&str> for Note {
     }
 }
 
+fn color_fret(fret: u8, fret_str: &str) -> ansi_term::ANSIString {
+    use ansi_term::Colour::Black as ATBlack;
+    use ansi_term::Colour::White as ATWhite;
+
+    const INLAYS: [u8; 10] = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+    if INLAYS.contains(&fret) {
+        ATBlack.on(ATWhite).paint(fret_str)
+    } else {
+        ATWhite.on(ATBlack).paint(fret_str)
+    }
+}
+
 fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
     let mut string = String::from("|");
 
@@ -121,7 +130,6 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
         } else {
             "--"
         };
-
         string = format!("{} {:2} |", string, fret_value);
     }
 
@@ -130,18 +138,10 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
 }
 
 fn print_legend(fret_count: u8) {
-    const INLAYS: [u8; 10] = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
-
     let mut legend = String::from("|");
     for fret in 1..(fret_count + 1) {
         let fret_str = format!("{:02}", fret);
-        let fret_str = if INLAYS.contains(&fret) {
-            ATBlack.on(ATWhite).paint(fret_str)
-        } else {
-            ATWhite.on(ATBlack).paint(fret_str)
-        };
-
-        legend = format!("{} {} |", legend, fret_str);
+        legend = format!("{} {} |", legend, color_fret(fret, &fret_str));
     }
     println!("{:3}{}", "", legend);
 }
