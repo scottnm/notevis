@@ -24,4 +24,6 @@ for fret in range(1, fret_count + 1):
     string += " -- |"
 
 print_string(header_row)
-print_string(string, "G.")
+for string_tuning in ['E', 'A', 'D', 'G', 'B', 'E']:
+    print_string(string, "{}.".format(string_tuning))
+
