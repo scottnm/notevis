@@ -8,7 +8,7 @@ ideas:
     - highlight the numbers in the header row for the dots
     */
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum Note {
     A,
     AB,
@@ -92,17 +92,23 @@ impl From<&str> for Note {
     }
 }
 
-fn print_string(fret_count: u8, string_tuning: Note) {
-    let header = format!("{:2}.", string_tuning.render());
-
+fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
     let mut string = String::from("|");
 
     let mut note = string_tuning;
     for _fret in 1..(fret_count + 1) {
         note = note.next();
-        string = format!("{} {:2} |", string, note.render());
+
+        let fret_value = if notes_to_show.contains(&note) {
+            note.render()
+        } else {
+            "--"
+        };
+
+        string = format!("{} {:2} |", string, fret_value);
     }
 
+    let header = format!("{}.", string_tuning.render());
     println!("{:3}{}", header, string);
 }
 
@@ -119,15 +125,11 @@ fn main() {
     let note_args = args.skip(1);
     let notes: Vec<Note> = note_args.map(|note_arg| Note::from(&note_arg[..])).collect();
 
-    for (i, note) in notes.iter().enumerate() {
-        println!("{}. {}", i, note.render());
-    }
-
     const FRET_COUNT: u8 = 17;
     print_legend(FRET_COUNT);
 
     let strings = [Note::E, Note::A, Note::D, Note::G, Note::B, Note::E];
     for string_tuning in strings.iter().rev() {
-        print_string(FRET_COUNT, *string_tuning);
+        print_string(FRET_COUNT, *string_tuning, notes.as_slice());
     }
 }
