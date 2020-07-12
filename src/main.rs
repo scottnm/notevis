@@ -11,51 +11,66 @@ ideas:
 #[derive(Clone, Copy, PartialEq)]
 enum Note {
     A,
-    AB,
+    As,
+    Bb,
     B,
     C,
-    CD,
+    Cs,
+    Db,
     D,
-    DE,
+    Ds,
+    Eb,
     E,
     F,
-    FG,
+    Fs,
+    Gb,
     G,
-    GA,
+    Gs,
+    Ab,
 }
 
 impl Note {
     fn render(&self) -> &str {
         match self {
             Note::A => "A",
-            Note::AB => "AB",
+            Note::As => "A#",
+            Note::Bb => "Bb",
             Note::B => "B",
             Note::C => "C",
-            Note::CD => "CD",
+            Note::Cs => "C#",
+            Note::Db => "Db",
             Note::D => "D",
-            Note::DE => "DE",
+            Note::Ds => "D#",
+            Note::Eb => "Eb",
             Note::E => "E",
             Note::F => "F",
-            Note::FG => "FG",
+            Note::Fs => "F#",
+            Note::Gb => "Gb",
             Note::G => "G",
-            Note::GA => "GA",
+            Note::Gs => "G#",
+            Note::Ab => "Ab",
         }
     }
 
-    fn next(&self) -> Self {
+    fn next(&self, key: &[Note]) -> Self {
         match self {
-            Note::A => Note::AB,
-            Note::AB => Note::B,
+            Note::A => if key.contains(&Note::As) { Note::As } else { Note::Bb },
+            Note::As => Note::B,
+            Note::Bb => Note::B,
             Note::B => Note::C,
-            Note::C => Note::CD,
-            Note::CD => Note::D,
-            Note::D => Note::DE,
-            Note::DE => Note::E,
+            Note::C => if key.contains(&Note::Cs) { Note::Cs } else { Note::Db },
+            Note::Cs => Note::D,
+            Note::Db => Note::D,
+            Note::D => if key.contains(&Note::Ds) { Note::Ds } else { Note::Eb },
+            Note::Ds => Note::E,
+            Note::Eb => Note::E,
             Note::E => Note::F,
-            Note::F => Note::FG,
-            Note::FG => Note::G,
-            Note::G => Note::GA,
-            Note::GA => Note::A,
+            Note::F => if key.contains(&Note::Fs) { Note::Fs } else { Note::Gb },
+            Note::Fs => Note::G,
+            Note::Gb => Note::G,
+            Note::G => if key.contains(&Note::Gs) { Note::Gs } else { Note::Ab },
+            Note::Gs => Note::A,
+            Note::Ab => Note::A,
         }
     }
 }
@@ -64,22 +79,22 @@ impl From<&str> for Note {
     fn from(s: &str) -> Self {
         const MAPPINGS: [(&str, Note); 17] = [
             ("a", Note::A),
-            ("a#", Note::AB),
-            ("bb", Note::AB),
+            ("a#", Note::As),
+            ("bb", Note::Bb),
             ("b", Note::B),
             ("c", Note::C),
-            ("c#", Note::CD),
-            ("db", Note::CD),
+            ("c#", Note::Cs),
+            ("db", Note::Db),
             ("d", Note::D),
-            ("d#", Note::DE),
-            ("eb", Note::DE),
+            ("d#", Note::Ds),
+            ("eb", Note::Eb),
             ("e", Note::E),
             ("f", Note::F),
-            ("f#", Note::FG),
-            ("gb", Note::FG),
+            ("f#", Note::Fs),
+            ("gb", Note::Gb),
             ("g", Note::G),
-            ("g#", Note::GA),
-            ("ab", Note::GA),
+            ("g#", Note::Gs),
+            ("ab", Note::Ab),
         ];
 
         for (note_string, note) in &MAPPINGS {
@@ -97,7 +112,10 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
 
     let mut note = string_tuning;
     for _fret in 1..(fret_count + 1) {
-        note = note.next();
+        // TODO: currently passing notes_to_show as the 'key' which is good enough since we don't
+        // do anything with the sharps/flats not expliclty specified but it could lead to odd
+        // behavior
+        note = note.next(notes_to_show);
 
         let fret_value = if notes_to_show.contains(&note) {
             note.render()
