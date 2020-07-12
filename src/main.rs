@@ -164,6 +164,18 @@ fn color_inlay(fret: u8, fret_str: &str) -> ansi_term::ANSIString {
     }
 }
 
+fn print_empty_string(fret_count: u8, string_tuning: Note) {
+    let mut string = String::from("|");
+
+    for _fret in 1..(fret_count + 1) {
+        string = format!("{} -- |", string);
+    }
+
+    let string_header = string_tuning.render();
+    let string_header_colour = ansi_term::Colour::White;
+    println!("{} {}", string_header_colour.paint(string_header), string);
+}
+
 fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
     let mut string = String::from("|");
 
@@ -184,10 +196,45 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
         string = format!("{} {} |", string, fret_colour.paint(fret_value));
     }
 
-    let (string_header, string_header_colour) = if notes_to_show.contains(&string_tuning) {
-        (string_tuning.render(), string_tuning.colour())
+    let string_header = string_tuning.render();
+    let string_header_colour = if notes_to_show.contains(&string_tuning) {
+        string_tuning.colour()
     } else {
-        (string_tuning.render(), ansi_term::Colour::White)
+        ansi_term::Colour::White
+    };
+
+    println!("{} {}", string_header_colour.paint(string_header), string);
+}
+
+fn print_fret_tab(fret_count: u8, string_tuning: Note, opt_fret_to_show: Option<u8>) {
+    if let None = opt_fret_to_show {
+        print_empty_string(fret_count, string_tuning);
+        return;
+    }
+
+    let fret_to_show = opt_fret_to_show.unwrap();
+
+    let mut string = String::from("|");
+    let mut note = string_tuning;
+    for fret in 1..(fret_count + 1) {
+        // TODO: need a key so we can properly determine whether the next note is a sharp or flat
+        note = note.next(&[]);
+
+        let (fret_value, fret_colour) = if fret == fret_to_show {
+            (note.render(), note.colour())
+        } else {
+            ("--", ansi_term::Colour::White)
+        };
+
+        let fret_value = format!("{:2}", fret_value);
+        string = format!("{} {} |", string, fret_colour.paint(fret_value));
+    }
+
+    let string_header = string_tuning.render();
+    let string_header_colour = if fret_to_show == 0 {
+        string_tuning.colour()
+    } else {
+        ansi_term::Colour::White
     };
 
     println!("{} {}", string_header_colour.paint(string_header), string);
@@ -203,6 +250,43 @@ fn print_legend(fret_count: u8) {
 }
 
 use structopt::StructOpt;
+
+#[derive(Debug)]
+struct ChordTab {
+    frets: [Option<u8>; 6],
+}
+
+impl std::str::FromStr for ChordTab {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut ct = ChordTab { frets: [None; 6] };
+        let input_frets: Vec<&str> = s.split(' ').collect();
+
+        if ct.frets.len() != input_frets.len() {
+            return Err(format!(
+                "Expected {} strings but found {}!",
+                ct.frets.len(),
+                input_frets.len()
+            ));
+        }
+
+        for (fret, fretted_string) in ct.frets.iter_mut().zip(input_frets.iter()) {
+            if fretted_string.eq_ignore_ascii_case("x") {
+                *fret = None;
+            } else {
+                if let Ok(parsed_fretted_string) = fretted_string.parse::<u8>() {
+                    *fret = Some(parsed_fretted_string);
+                    continue;
+                }
+
+                return Err(format!("'{}' couldn't be parsed as a fret", fretted_string));
+            }
+        }
+
+        Ok(ct)
+    }
+}
 
 #[derive(Debug, StructOpt, Clone, Copy)]
 #[structopt()]
@@ -241,25 +325,44 @@ impl Tuning {
 #[structopt()]
 struct Options {
     #[structopt(short, long)]
-    notes: Vec<Note>,
+    notes: Option<Vec<Note>>,
 
     #[structopt(short, long, default_value = "Standard")]
     tuning: Tuning,
+
+    #[structopt(short, long)]
+    chord_tab: Option<ChordTab>,
 }
 
 fn main() {
     let options = Options::from_args();
-
     let strings = options.tuning.as_strings();
 
     const FRET_COUNT: u8 = 17;
-    print_legend(FRET_COUNT);
-    println!();
 
-    for string_tuning in strings.iter().rev() {
-        print_string(FRET_COUNT, *string_tuning, options.notes.as_slice());
+    if let Some(notes) = options.notes {
+        print_legend(FRET_COUNT);
+        println!();
+
+        for string in strings.iter().rev() {
+            print_string(FRET_COUNT, *string, notes.as_slice());
+        }
+
+        println!();
     }
 
-    println!();
+    if let Some(chord_tab) = options.chord_tab {
+        assert!(strings.len() == chord_tab.frets.len());
+
+        print_legend(FRET_COUNT);
+        println!();
+
+        for (string, fret_tab) in strings.iter().rev().zip(chord_tab.frets.iter()) {
+            print_fret_tab(FRET_COUNT, *string, *fret_tab)
+        }
+
+        println!();
+    }
+
     println!("Tuning: {:?}", options.tuning);
 }
