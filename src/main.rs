@@ -1,28 +1,28 @@
-fn print_string(header: &str, string: &str) {
+fn print_string(fret_count: u8, header: &str) {
+    let mut string = String::from("|");
+    for _fret in 1..(fret_count + 1) {
+        string = format!("{} -- |", string);
+    }
+
     println!("{:3}{}", header, string);
 }
 
-fn print_string_key(key_string: &str) {
-    print_string("", key_string);
+fn print_string_key(fret_count: u8) {
+    let mut header_row = String::from("|");
+    for fret in 1..(fret_count + 1) {
+        header_row = format!("{} {:02} |", header_row, fret);
+    }
+    println!("{:3}{}", "", header_row);
 }
 
 fn main() {
     // print the header
     const FRET_COUNT: u8 = 17;
-    let mut header_row = String::from("|");
-    for fret in 1..FRET_COUNT + 1 {
-        header_row = format!("{} {:02} |", header_row, fret);
-    }
+    print_string_key(FRET_COUNT);
 
-    let mut string = String::from("|");
-    for _fret in 1..FRET_COUNT + 1 {
-        string = format!("{} -- |", string);
-    }
-
-    print_string_key(&header_row);
     let strings = ['E', 'A', 'D', 'G', 'B', 'E'];
     for string_tuning in strings.iter().rev() {
-        print_string(&format!("{}.", string_tuning), &string);
+        print_string(FRET_COUNT, &format!("{}.", string_tuning));
     }
 }
 
@@ -33,6 +33,7 @@ ideas:
     - allow different fret "views"
     - pick unique colors for different notes highlighted
     - support sharps and flats
+    - highlight the numbers in the header row for the dots
     */
 
 /*
