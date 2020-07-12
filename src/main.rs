@@ -1,7 +1,64 @@
-fn print_string(fret_count: u8, header: &str) {
+#[derive(Clone, Copy)]
+enum Note {
+    A,
+    AB,
+    B,
+    C,
+    CD,
+    D,
+    DE,
+    E,
+    F,
+    FG,
+    G,
+    GA,
+}
+
+impl Note {
+    fn render(&self) -> &str {
+        match self {
+            Note::A => "A",
+            Note::AB => "AB",
+            Note::B => "B",
+            Note::C => "C",
+            Note::CD => "CD",
+            Note::D => "D",
+            Note::DE => "DE",
+            Note::E => "E",
+            Note::F => "F",
+            Note::FG => "FG",
+            Note::G => "G",
+            Note::GA => "GA",
+        }
+    }
+
+    fn next(&self) -> Self {
+        match self {
+            Note::A => Note::AB,
+            Note::AB => Note::B,
+            Note::B => Note::C,
+            Note::C => Note::CD,
+            Note::CD => Note::D,
+            Note::D => Note::DE,
+            Note::DE => Note::E,
+            Note::E => Note::F,
+            Note::F => Note::FG,
+            Note::FG => Note::G,
+            Note::G => Note::GA,
+            Note::GA => Note::A,
+        }
+    }
+}
+
+fn print_string(fret_count: u8, string_tuning: Note) {
+    let header = format!("{:2}.", string_tuning.render());
+
     let mut string = String::from("|");
+
+    let mut note = string_tuning;
     for _fret in 1..(fret_count + 1) {
-        string = format!("{} -- |", string);
+        note = note.next();
+        string = format!("{} {:2} |", string, note.render());
     }
 
     println!("{:3}{}", header, string);
@@ -20,9 +77,9 @@ fn main() {
     const FRET_COUNT: u8 = 17;
     print_string_key(FRET_COUNT);
 
-    let strings = ['E', 'A', 'D', 'G', 'B', 'E'];
+    let strings = [Note::E, Note::A, Note::D, Note::G, Note::B, Note::E];
     for string_tuning in strings.iter().rev() {
-        print_string(FRET_COUNT, &format!("{}.", string_tuning));
+        print_string(FRET_COUNT, *string_tuning);
     }
 }
 
