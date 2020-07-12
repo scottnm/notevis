@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum Note {
     A,
     As,
@@ -118,8 +118,10 @@ impl Note {
     }
 }
 
-impl From<&str> for Note {
-    fn from(s: &str) -> Self {
+impl std::str::FromStr for Note {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         const MAPPINGS: [(&str, Note); 17] = [
             ("a", Note::A),
             ("a#", Note::As),
@@ -142,11 +144,11 @@ impl From<&str> for Note {
 
         for (note_string, note) in &MAPPINGS {
             if note_string.eq_ignore_ascii_case(s) {
-                return *note;
+                return Ok(*note);
             }
         }
 
-        panic!("Could not parse string as note! [{}]", s);
+        Err(format!("Could not parse '{}' as note!", s))
     }
 }
 
@@ -172,18 +174,23 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
         // behavior
         note = note.next(notes_to_show);
 
-        let (fret_value, fret_color) = if notes_to_show.contains(&note) {
+        let (fret_value, fret_colour) = if notes_to_show.contains(&note) {
             (note.render(), note.colour())
         } else {
             ("--", ansi_term::Colour::White)
         };
 
         let fret_value = format!("{:2}", fret_value);
-        string = format!("{} {} |", string, fret_color.paint(fret_value));
+        string = format!("{} {} |", string, fret_colour.paint(fret_value));
     }
 
-    let header = format!("{}.", string_tuning.render());
-    println!("{:3}{}", header, string);
+    let (string_header, string_header_colour) = if notes_to_show.contains(&string_tuning) {
+        (string_tuning.render(), string_tuning.colour())
+    } else {
+        (string_tuning.render(), ansi_term::Colour::White)
+    };
+
+    println!("{} {}", string_header_colour.paint(string_header), string);
 }
 
 fn print_legend(fret_count: u8) {
@@ -192,21 +199,67 @@ fn print_legend(fret_count: u8) {
         let fret_str = format!("{:02}", fret);
         legend = format!("{} {} |", legend, color_inlay(fret, &fret_str));
     }
-    println!("{:3}{}", "", legend);
+    println!("{:2}{}", "", legend);
+}
+
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt, Clone, Copy)]
+#[structopt()]
+enum Tuning {
+    Standard,
+    DropD,
+}
+
+impl std::str::FromStr for Tuning {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        const MAPPINGS: [(&str, Tuning); 2] =
+            [("standard", Tuning::Standard), ("dropd", Tuning::DropD)];
+
+        for (tuning_string, tuning) in &MAPPINGS {
+            if tuning_string.eq_ignore_ascii_case(s) {
+                return Ok(*tuning);
+            }
+        }
+
+        Err(format!("Failed to parse '{}' as tuning", s))
+    }
+}
+
+impl Tuning {
+    fn as_strings(&self) -> [Note; 6] {
+        match self {
+            Tuning::Standard => [Note::E, Note::A, Note::D, Note::G, Note::B, Note::E],
+            Tuning::DropD => [Note::D, Note::A, Note::D, Note::G, Note::B, Note::E],
+        }
+    }
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt()]
+struct Options {
+    #[structopt(short, long)]
+    notes: Vec<Note>,
+
+    #[structopt(short, long, default_value = "Standard")]
+    tuning: Tuning,
 }
 
 fn main() {
-    let args = std::env::args();
-    let note_args = args.skip(1);
-    let notes: Vec<Note> = note_args
-        .map(|note_arg| Note::from(&note_arg[..]))
-        .collect();
+    let options = Options::from_args();
+
+    let strings = options.tuning.as_strings();
 
     const FRET_COUNT: u8 = 17;
     print_legend(FRET_COUNT);
+    println!();
 
-    let strings = [Note::E, Note::A, Note::D, Note::G, Note::B, Note::E];
     for string_tuning in strings.iter().rev() {
-        print_string(FRET_COUNT, *string_tuning, notes.as_slice());
+        print_string(FRET_COUNT, *string_tuning, options.notes.as_slice());
     }
+
+    println!();
+    println!("Tuning: {:?}", options.tuning);
 }

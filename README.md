@@ -5,12 +5,12 @@ Plot out all the different permuatations of a given set of notes on a fretboard
 * supports sharps vs flats
 * adds inlay highlights for easier visualization
 * adds unique color to each note for easier visualization
+* supports alternate tunings
 
-![demo image](demo/demo.PNG)
+![demo image](demo/demo2.PNG)
 
 ## TODO
 
-* support different string tunings
 * input frets/tab and have it render on strings with note names (and suitable keys?)
 * support more string counts
 * support variable fret ranges
