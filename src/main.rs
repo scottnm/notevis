@@ -51,8 +51,8 @@ impl Note {
         use ansi_term::Colour;
         match self {
             Note::A => Colour::Fixed(7),
-            Note::As => Colour::Fixed(8),
-            Note::Bb => Colour::Fixed(8),
+            Note::As => Colour::Fixed(15),
+            Note::Bb => Colour::Fixed(15),
             Note::B => Colour::Fixed(1),
             Note::C => Colour::Fixed(2),
             Note::Cs => Colour::Fixed(10),
@@ -125,7 +125,7 @@ impl From<&str> for Note {
     }
 }
 
-fn color_fret(fret: u8, fret_str: &str) -> ansi_term::ANSIString {
+fn color_inlay(fret: u8, fret_str: &str) -> ansi_term::ANSIString {
     use ansi_term::Colour::Black as ATBlack;
     use ansi_term::Colour::White as ATWhite;
 
@@ -165,7 +165,7 @@ fn print_legend(fret_count: u8) {
     let mut legend = String::from("|");
     for fret in 1..(fret_count + 1) {
         let fret_str = format!("{:02}", fret);
-        legend = format!("{} {} |", legend, color_fret(fret, &fret_str));
+        legend = format!("{} {} |", legend, color_inlay(fret, &fret_str));
     }
     println!("{:3}{}", "", legend);
 }
