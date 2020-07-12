@@ -2,7 +2,6 @@
 // - allow different tuninings
 // - allow different string counts
 // - allow different fret ranges besides 1->17
-// - pick unique colors for different notes highlighted
 
 #[derive(Clone, Copy, PartialEq)]
 enum Note {
@@ -45,6 +44,29 @@ impl Note {
             Note::G => "G",
             Note::Gs => "G#",
             Note::Ab => "Ab",
+        }
+    }
+
+    fn colour(&self) -> ansi_term::Colour {
+        use ansi_term::Colour;
+        match self {
+            Note::A => Colour::Fixed(7),
+            Note::As => Colour::Fixed(8),
+            Note::Bb => Colour::Fixed(8),
+            Note::B => Colour::Fixed(1),
+            Note::C => Colour::Fixed(2),
+            Note::Cs => Colour::Fixed(10),
+            Note::Db => Colour::Fixed(10),
+            Note::D => Colour::Fixed(3),
+            Note::Ds => Colour::Fixed(11),
+            Note::Eb => Colour::Fixed(11),
+            Note::E => Colour::Fixed(4),
+            Note::F => Colour::Fixed(5),
+            Note::Fs => Colour::Fixed(13),
+            Note::Gb => Colour::Fixed(13),
+            Note::G => Colour::Fixed(6),
+            Note::Gs => Colour::Fixed(14),
+            Note::Ab => Colour::Fixed(14),
         }
     }
 
@@ -125,12 +147,14 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
         // behavior
         note = note.next(notes_to_show);
 
-        let fret_value = if notes_to_show.contains(&note) {
-            note.render()
+        let (fret_value, fret_color) = if notes_to_show.contains(&note) {
+            (note.render(), note.colour())
         } else {
-            "--"
+            ("--", ansi_term::Colour::White)
         };
-        string = format!("{} {:2} |", string, fret_value);
+
+        let fret_value = format!("{:2}", fret_value);
+        string = format!("{} {} |", string, fret_color.paint(fret_value));
     }
 
     let header = format!("{}.", string_tuning.render());
