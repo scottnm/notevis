@@ -72,21 +72,51 @@ impl Note {
 
     fn next(&self, key: &[Note]) -> Self {
         match self {
-            Note::A => if key.contains(&Note::As) { Note::As } else { Note::Bb },
+            Note::A => {
+                if key.contains(&Note::As) {
+                    Note::As
+                } else {
+                    Note::Bb
+                }
+            }
             Note::As => Note::B,
             Note::Bb => Note::B,
             Note::B => Note::C,
-            Note::C => if key.contains(&Note::Cs) { Note::Cs } else { Note::Db },
+            Note::C => {
+                if key.contains(&Note::Cs) {
+                    Note::Cs
+                } else {
+                    Note::Db
+                }
+            }
             Note::Cs => Note::D,
             Note::Db => Note::D,
-            Note::D => if key.contains(&Note::Ds) { Note::Ds } else { Note::Eb },
+            Note::D => {
+                if key.contains(&Note::Ds) {
+                    Note::Ds
+                } else {
+                    Note::Eb
+                }
+            }
             Note::Ds => Note::E,
             Note::Eb => Note::E,
             Note::E => Note::F,
-            Note::F => if key.contains(&Note::Fs) { Note::Fs } else { Note::Gb },
+            Note::F => {
+                if key.contains(&Note::Fs) {
+                    Note::Fs
+                } else {
+                    Note::Gb
+                }
+            }
             Note::Fs => Note::G,
             Note::Gb => Note::G,
-            Note::G => if key.contains(&Note::Gs) { Note::Gs } else { Note::Ab },
+            Note::G => {
+                if key.contains(&Note::Gs) {
+                    Note::Gs
+                } else {
+                    Note::Ab
+                }
+            }
             Note::Gs => Note::A,
             Note::Ab => Note::A,
         }
@@ -173,7 +203,9 @@ fn print_legend(fret_count: u8) {
 fn main() {
     let args = std::env::args();
     let note_args = args.skip(1);
-    let notes: Vec<Note> = note_args.map(|note_arg| Note::from(&note_arg[..])).collect();
+    let notes: Vec<Note> = note_args
+        .map(|note_arg| Note::from(&note_arg[..]))
+        .collect();
 
     const FRET_COUNT: u8 = 17;
     print_legend(FRET_COUNT);
