@@ -1,12 +1,9 @@
-/*
-ideas:
-    - allow different tuninings
-    - allow different string counts
-    - allow different fret "views"
-    - pick unique colors for different notes highlighted
-    - support sharps and flats
-    - highlight the numbers in the header row for the dots
-    */
+// General improvements/TODOs
+// - allow different tuninings
+// - allow different string counts
+// - allow different fret ranges besides 1->17
+// - pick unique colors for different notes highlighted
+// - highlight the numbers in the header row for the dots
 
 #[derive(Clone, Copy, PartialEq)]
 enum Note {
