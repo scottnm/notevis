@@ -3,7 +3,9 @@
 // - allow different string counts
 // - allow different fret ranges besides 1->17
 // - pick unique colors for different notes highlighted
-// - highlight the numbers in the header row for the dots
+
+use ansi_term::Colour::Black as ATBlack;
+use ansi_term::Colour::White as ATWhite;
 
 #[derive(Clone, Copy, PartialEq)]
 enum Note {
@@ -128,9 +130,18 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
 }
 
 fn print_legend(fret_count: u8) {
+    const INLAYS: [u8; 10] = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+
     let mut legend = String::from("|");
     for fret in 1..(fret_count + 1) {
-        legend = format!("{} {:02} |", legend, fret);
+        let fret_str = format!("{:02}", fret);
+        let fret_str = if INLAYS.contains(&fret) {
+            ATBlack.on(ATWhite).paint(fret_str)
+        } else {
+            ATWhite.on(ATBlack).paint(fret_str)
+        };
+
+        legend = format!("{} {} |", legend, fret_str);
     }
     println!("{:3}{}", "", legend);
 }
