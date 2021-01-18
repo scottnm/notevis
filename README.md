@@ -1,6 +1,6 @@
 # NoteVis
 
-A tool to help visual musical notes on a fret board. Currently two modes are supported:
+A tool to help visualize musical notes on a fret board. Currently two modes are supported:
 
 1. **Note-to-fret**: Given a tuning and set of notes, print all occurences of that set of notes on the fretboard.
  ![demo image](demo/demo2.PNG)
