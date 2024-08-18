@@ -22,21 +22,21 @@ enum Note {
 impl Note {
     fn render(&self) -> &str {
         match self {
-            Note::A => "A",
+            Note::A => "A ",
             Note::As => "A#",
             Note::Bb => "Bb",
-            Note::B => "B",
-            Note::C => "C",
+            Note::B => "B ",
+            Note::C => "C ",
             Note::Cs => "C#",
             Note::Db => "Db",
-            Note::D => "D",
+            Note::D => "D ",
             Note::Ds => "D#",
             Note::Eb => "Eb",
-            Note::E => "E",
-            Note::F => "F",
+            Note::E => "E ",
+            Note::F => "F ",
             Note::Fs => "F#",
             Note::Gb => "Gb",
-            Note::G => "G",
+            Note::G => "G ",
             Note::Gs => "G#",
             Note::Ab => "Ab",
         }
@@ -192,7 +192,6 @@ fn print_string(fret_count: u8, string_tuning: Note, notes_to_show: &[Note]) {
             ("--", ansi_term::Colour::White)
         };
 
-        let fret_value = format!("{:2}", fret_value);
         string = format!("{} {} |", string, fret_colour.paint(fret_value));
     }
 
@@ -226,7 +225,6 @@ fn print_fret_tab(fret_count: u8, string_tuning: Note, opt_fret_to_show: Option<
             ("--", ansi_term::Colour::White)
         };
 
-        let fret_value = format!("{:2}", fret_value);
         string = format!("{} {} |", string, fret_colour.paint(fret_value));
     }
 
@@ -246,7 +244,7 @@ fn print_legend(fret_count: u8) {
         let fret_str = format!("{:02}", fret);
         legend = format!("{} {} |", legend, color_inlay(fret, &fret_str));
     }
-    println!("{:2}{}", "", legend);
+    println!("{:3}{}", "", legend);
 }
 
 use structopt::StructOpt;
@@ -293,14 +291,20 @@ impl std::str::FromStr for ChordTab {
 enum Tuning {
     Standard,
     DropD,
+    DropC,
+    DropB,
 }
 
 impl std::str::FromStr for Tuning {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        const MAPPINGS: [(&str, Tuning); 2] =
-            [("standard", Tuning::Standard), ("dropd", Tuning::DropD)];
+        const MAPPINGS: [(&str, Tuning); 4] = [
+            ("standard", Tuning::Standard),
+            ("dropd", Tuning::DropD),
+            ("dropc", Tuning::DropC),
+            ("dropb", Tuning::DropB),
+        ];
 
         for (tuning_string, tuning) in &MAPPINGS {
             if tuning_string.eq_ignore_ascii_case(s) {
@@ -317,6 +321,8 @@ impl Tuning {
         match self {
             Tuning::Standard => [Note::E, Note::A, Note::D, Note::G, Note::B, Note::E],
             Tuning::DropD => [Note::D, Note::A, Note::D, Note::G, Note::B, Note::E],
+            Tuning::DropC => [Note::C, Note::G, Note::C, Note::F, Note::A, Note::D],
+            Tuning::DropB => [Note::B, Note::Fs, Note::B, Note::E, Note::Gs, Note::Cs],
         }
     }
 }
@@ -324,28 +330,29 @@ impl Tuning {
 #[derive(Debug, StructOpt)]
 #[structopt()]
 struct Options {
-    #[structopt(short, long)]
+    #[structopt(short, long, help = "e.g. C D Eb F G Ab B")]
     notes: Option<Vec<Note>>,
 
     #[structopt(short, long, default_value = "Standard")]
     tuning: Tuning,
 
-    #[structopt(short, long)]
+    #[structopt(short, long, help = "e.g. 'x x 0 2 2 3'")]
     chord_tab: Option<ChordTab>,
+
+    #[structopt(short, long, default_value = "17")]
+    fret_count: u8,
 }
 
 fn main() {
     let options = Options::from_args();
     let strings = options.tuning.as_strings();
 
-    const FRET_COUNT: u8 = 17;
-
     if let Some(notes) = options.notes {
-        print_legend(FRET_COUNT);
+        print_legend(options.fret_count);
         println!();
 
         for string in strings.iter().rev() {
-            print_string(FRET_COUNT, *string, notes.as_slice());
+            print_string(options.fret_count, *string, notes.as_slice());
         }
 
         println!();
@@ -354,11 +361,11 @@ fn main() {
     if let Some(chord_tab) = options.chord_tab {
         assert!(strings.len() == chord_tab.frets.len());
 
-        print_legend(FRET_COUNT);
+        print_legend(options.fret_count);
         println!();
 
         for (string, fret_tab) in strings.iter().rev().zip(chord_tab.frets.iter()) {
-            print_fret_tab(FRET_COUNT, *string, *fret_tab)
+            print_fret_tab(options.fret_count, *string, *fret_tab)
         }
 
         println!();
