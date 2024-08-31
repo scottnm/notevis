@@ -347,11 +347,9 @@ enum NoteVisCmd {
 
         #[structopt(short, long, default_value = "Standard")]
         tuning: Tuning,
-
-        #[structopt(short, long, default_value = "17")]
-        fret_count: u8,
     }
 }
+
 fn main() {
     let cmd_args = NoteVisCmd::from_args();
     match cmd_args {
@@ -366,9 +364,18 @@ fn main() {
             println!("Tuning: {:?}", tuning);
         },
 
-        NoteVisCmd::ChordTab{chord_tab, tuning, fret_count} => {
+        NoteVisCmd::ChordTab{chord_tab, tuning} => {
             let strings = tuning.as_strings();
             assert!(strings.len() == chord_tab.frets.len());
+
+            let highest_fret = chord_tab.frets
+                .iter().map(|maybe_fret| maybe_fret.unwrap_or(0))
+                .max();
+
+            let fret_count = match highest_fret {
+                Some(fret_count) => fret_count + 3,
+                None => 5,
+            };
 
             print_legend(fret_count);
             println!();
