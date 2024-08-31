@@ -328,48 +328,55 @@ impl Tuning {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt()]
-struct Options {
-    #[structopt(short, long, help = "e.g. C D Eb F G Ab B")]
-    notes: Option<Vec<Note>>,
+#[structopt(about = "Visualize notes on a fretboard")]
+enum NoteVisCmd {
+    Notes {
+        #[structopt(short, long, help = "e.g. C D Eb F G Ab B")]
+        notes: Vec<Note>,
 
-    #[structopt(short, long, default_value = "Standard")]
-    tuning: Tuning,
+        #[structopt(short, long, default_value = "Standard")]
+        tuning: Tuning,
 
-    #[structopt(short, long, help = "e.g. 'x x 0 2 2 3'")]
-    chord_tab: Option<ChordTab>,
+        #[structopt(short, long, default_value = "17")]
+        fret_count: u8,
+    },
 
-    #[structopt(short, long, default_value = "17")]
-    fret_count: u8,
+    ChordTab {
+        #[structopt(short, long, help = "e.g. 'x x 0 2 2 3'")]
+        chord_tab: ChordTab,
+
+        #[structopt(short, long, default_value = "Standard")]
+        tuning: Tuning,
+
+        #[structopt(short, long, default_value = "17")]
+        fret_count: u8,
+    }
 }
-
 fn main() {
-    let options = Options::from_args();
-    let strings = options.tuning.as_strings();
+    let cmd_args = NoteVisCmd::from_args();
+    match cmd_args {
+        NoteVisCmd::Notes{notes, tuning, fret_count} => {
+            let strings = tuning.as_strings();
+            print_legend(fret_count);
+            println!();
 
-    if let Some(notes) = options.notes {
-        print_legend(options.fret_count);
-        println!();
+            for string in strings.iter().rev() {
+                print_string(fret_count, *string, notes.as_slice());
+            }
+            println!("Tuning: {:?}", tuning);
+        },
 
-        for string in strings.iter().rev() {
-            print_string(options.fret_count, *string, notes.as_slice());
-        }
+        NoteVisCmd::ChordTab{chord_tab, tuning, fret_count} => {
+            let strings = tuning.as_strings();
+            assert!(strings.len() == chord_tab.frets.len());
 
-        println!();
+            print_legend(fret_count);
+            println!();
+
+            for (string, fret_tab) in strings.iter().rev().zip(chord_tab.frets.iter()) {
+                print_fret_tab(fret_count, *string, *fret_tab)
+            }
+            println!("Tuning: {:?}", tuning);
+        },
     }
-
-    if let Some(chord_tab) = options.chord_tab {
-        assert!(strings.len() == chord_tab.frets.len());
-
-        print_legend(options.fret_count);
-        println!();
-
-        for (string, fret_tab) in strings.iter().rev().zip(chord_tab.frets.iter()) {
-            print_fret_tab(options.fret_count, *string, *fret_tab)
-        }
-
-        println!();
-    }
-
-    println!("Tuning: {:?}", options.tuning);
 }
